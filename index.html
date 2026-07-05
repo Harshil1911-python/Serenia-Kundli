@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jyotish Kundli System</title>
+<style>
+  :root {
+    --saffron: #FF6600;
+    --maroon: #800000;
+    --dark-red: #8B0000;
+    --gold: #C8960C;
+    --cream: #FFF8E7;
+    --light-gold: #FDF3DC;
+    --text: #2C1810;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; background: #1a0a0a; color: var(--text); min-height: 100vh; }
+  
+  .top-bar {
+    background: linear-gradient(135deg, var(--dark-red), #4a0000);
+    color: white; padding: 0;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+  }
+  .top-bar-inner { max-width: 1200px; margin: 0 auto; padding: 16px 24px; display: flex; align-items: center; justify-content: space-between; }
+  .logo { font-size: 1.6rem; font-weight: 700; letter-spacing: 1px; }
+  .logo span { color: var(--gold); }
+  .nav a { color: rgba(255,255,255,0.85); text-decoration: none; padding: 8px 16px; border-radius: 6px; margin-left: 8px; font-size: 0.95rem; transition: background 0.2s; }
+  .nav a:hover, .nav a.active { background: rgba(200,150,12,0.3); color: var(--gold); }
+
+  .hero { background: linear-gradient(180deg, #1a0a0a, #2d0a0a); padding: 40px 24px 20px; text-align: center; }
+  .hero h1 { font-size: 2.2rem; color: var(--gold); font-weight: 700; letter-spacing: 2px; text-shadow: 0 0 20px rgba(200,150,12,0.3); }
+  .hero p { color: rgba(255,200,100,0.7); font-size: 1rem; margin-top: 8px; font-style: italic; }
+
+  .container { max-width: 1100px; margin: 0 auto; padding: 24px; }
+  
+  .card { background: var(--cream); border-radius: 12px; box-shadow: 0 8px 32px rgba(0,0,0,0.4); overflow: hidden; margin-bottom: 24px; }
+  .card-header { background: linear-gradient(135deg, var(--dark-red), var(--maroon)); color: white; padding: 14px 20px; font-size: 1.05rem; font-weight: 700; letter-spacing: 1px; display: flex; align-items: center; gap: 8px; }
+  .card-header .icon { font-size: 1.3rem; }
+  .card-body { padding: 20px; }
+
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .form-group { display: flex; flex-direction: column; gap: 6px; }
+  .form-group label { font-weight: 600; color: var(--maroon); font-size: 0.88rem; text-transform: uppercase; letter-spacing: 0.5px; }
+  .form-group input, .form-group select {
+    padding: 10px 14px; border: 2px solid #e0c090; border-radius: 8px;
+    font-size: 0.95rem; background: white; color: var(--text);
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .form-group input:focus, .form-group select:focus { outline: none; border-color: var(--gold); box-shadow: 0 0 0 3px rgba(200,150,12,0.15); }
+  .form-hint { font-size: 0.78rem; color: #999; }
+  .form-row { grid-column: 1/-1; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+
+  .btn { padding: 12px 28px; border: none; border-radius: 8px; font-size: 0.98rem; font-weight: 700; cursor: pointer; transition: all 0.2s; letter-spacing: 0.5px; }
+  .btn-primary { background: linear-gradient(135deg, var(--dark-red), var(--saffron)); color: white; }
+  .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(139,0,0,0.4); }
+  .btn-secondary { background: linear-gradient(135deg, var(--gold), #e6a800); color: white; }
+  .btn-secondary:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(200,150,12,0.4); }
+  .btn-pdf { background: linear-gradient(135deg, #2E7D32, #4CAF50); color: white; }
+  .btn-pdf:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(46,125,50,0.4); }
+  .btn-group { display: flex; gap: 12px; margin-top: 8px; flex-wrap: wrap; }
+
+  .loader { display: none; text-align: center; padding: 40px; }
+  .spinner { width: 50px; height: 50px; border: 5px solid var(--light-gold); border-top-color: var(--gold); border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 16px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .result-section { display: none; }
+  
+  /* Sections */
+  .section-title { font-size: 1.1rem; font-weight: 700; color: white; background: linear-gradient(135deg, var(--maroon), var(--dark-red)); padding: 10px 16px; border-radius: 8px; margin-bottom: 12px; margin-top: 20px; display: flex; align-items: center; gap: 8px; }
+  
+  /* Info grid */
+  .info-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; }
+  .info-item { background: var(--light-gold); border: 1px solid var(--gold); border-radius: 8px; padding: 12px; }
+  .info-item .label { font-size: 0.75rem; color: var(--maroon); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+  .info-item .value { font-size: 1rem; font-weight: 600; color: var(--text); }
+  
+  /* Chart */
+  .chart-wrap { display: flex; justify-content: center; padding: 16px; }
+  #north-chart { border: 3px solid var(--gold); background: var(--light-gold); }
+  
+  /* Table */
+  .data-table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+  .data-table th { background: var(--dark-red); color: white; padding: 8px 12px; text-align: left; font-weight: 600; }
+  .data-table td { padding: 7px 12px; border-bottom: 1px solid #e0c090; }
+  .data-table tr:nth-child(even) { background: var(--light-gold); }
+  .data-table tr:hover { background: #fce8b0; }
+
+  /* Status badges */
+  .badge { padding: 3px 10px; border-radius: 20px; font-size: 0.8rem; font-weight: 700; }
+  .badge-red { background: #fde8e8; color: #c00; border: 1px solid #f00; }
+  .badge-green { background: #e8fde8; color: #060; border: 1px solid #0a0; }
+  .badge-orange { background: #fdf0e0; color: #c60; border: 1px solid #f90; }
+
+  /* Panchang cards */
+  .panchang-grid { display: grid; grid-template-columns: repeat(5,1fr); gap: 12px; }
+  .panch-card { text-align: center; background: white; border: 2px solid var(--gold); border-radius: 10px; padding: 14px 8px; }
+  .panch-card .p-label { font-size: 0.7rem; font-weight: 700; color: var(--saffron); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+  .panch-card .p-val { font-size: 0.9rem; font-weight: 600; color: var(--text); }
+
+  /* Dasha */
+  .dasha-item { display: flex; align-items: center; gap: 12px; padding: 8px 12px; background: var(--light-gold); border-radius: 8px; margin-bottom: 6px; border-left: 4px solid var(--gold); }
+  .dasha-lord { font-weight: 700; color: var(--maroon); width: 80px; font-size: 0.95rem; }
+  .dasha-dates { font-size: 0.82rem; color: #666; flex: 1; }
+  .dasha-bar { height: 6px; background: linear-gradient(90deg, var(--saffron), var(--gold)); border-radius: 3px; }
+
+  .error-msg { background: #fde8e8; border: 2px solid #e00; border-radius: 8px; padding: 14px; color: #900; font-weight: 600; margin-top: 12px; display: none; }
+  
+  /* Sanskrit quote */
+  .shloka { font-style: italic; color: var(--maroon); font-size: 1.05rem; text-align: center; padding: 10px; opacity: 0.8; }
+
+  @media (max-width: 700px) {
+    .form-grid { grid-template-columns: 1fr; }
+    .form-row { grid-template-columns: 1fr; }
+    .panchang-grid { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="top-bar">
+  <div class="top-bar-inner">
+    <div class="logo">🕉 <span>Jyotish</span> Kundli</div>
+    <div class="nav">
+      <a href="/" class="active">Kundli</a>
+      <a href="/match">Marriage Matching</a>
+    </div>
+  </div>
+</div>
+
+<div class="hero">
+  <h1>✦ Vedic Birth Horoscope Generator ✦</h1>
+  <p class="shloka">"यत्र विश्वम् भवत्येकनीडम्" — Where the Universe becomes One Nest</p>
+</div>
+
+<div class="container">
+  <div class="card">
+    <div class="card-header"><span class="icon">🌟</span> Enter Birth Details</div>
+    <div class="card-body">
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Full Name</label>
+          <input type="text" id="name" placeholder="e.g., Arjun Sharma" />
+        </div>
+        <div class="form-group">
+          <label>Gender</label>
+          <select id="gender">
+            <option>Male</option>
+            <option>Female</option>
+            <option>Other</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Date of Birth</label>
+          <input type="text" id="dob" placeholder="DD/MM/YYYY" maxlength="10"/>
+          <span class="form-hint">Format: DD/MM/YYYY</span>
+        </div>
+        <div class="form-group">
+          <label>Time of Birth</label>
+          <input type="text" id="tob" placeholder="HH:MM (24hr)" maxlength="5"/>
+          <span class="form-hint">24-hour format e.g. 14:30</span>
+        </div>
+        <div class="form-group">
+          <label>Place of Birth</label>
+          <input type="text" id="place" placeholder="e.g., Mumbai, India" />
+        </div>
+        <div class="form-group">
+          <label>Time Zone (UTC offset)</label>
+          <select id="tz">
+            <option value="5.5" selected>IST +5:30 (India)</option>
+            <option value="0">UTC +0:00</option>
+            <option value="1">CET +1:00</option>
+            <option value="2">EET +2:00</option>
+            <option value="3">AST +3:00</option>
+            <option value="4">GST +4:00</option>
+            <option value="6">BST +6:00</option>
+            <option value="7">ICT +7:00</option>
+            <option value="8">CST +8:00</option>
+            <option value="9">JST +9:00</option>
+            <option value="10">AEST +10:00</option>
+            <option value="-5">EST -5:00</option>
+            <option value="-6">CST -6:00</option>
+            <option value="-7">MST -7:00</option>
+            <option value="-8">PST -8:00</option>
+          </select>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Latitude</label>
+            <input type="number" id="lat" placeholder="e.g., 23.0225" step="0.0001" value="23.0225"/>
+            <span class="form-hint">North = positive</span>
+          </div>
+          <div class="form-group">
+            <label>Longitude</label>
+            <input type="number" id="lon" placeholder="e.g., 72.5714" step="0.0001" value="72.5714"/>
+            <span class="form-hint">East = positive</span>
+          </div>
+          <div class="form-group" style="justify-content:flex-end;">
+            <label>&nbsp;</label>
+            <button class="btn btn-secondary" onclick="useDefaultCoords()">📍 Default (Ahmedabad)</button>
+          </div>
+        </div>
+      </div>
+      <div class="btn-group" style="margin-top:20px;">
+        <button class="btn btn-primary" onclick="generateKundli()">🔮 Generate Kundli</button>
+        <button class="btn btn-pdf" onclick="downloadPDF()">📄 Download PDF</button>
+      </div>
+      <div class="error-msg" id="error-msg"></div>
+    </div>
+  </div>
+
+  <div class="loader" id="loader">
+    <div class="spinner"></div>
+    <p style="color:var(--gold);font-size:1rem;">Computing planetary positions...</p>
+  </div>
+
+  <div class="result-section" id="results">
+    <!-- Birth Details -->
+    <div class="card">
+      <div class="card-header"><span class="icon">📋</span> Birth Details & Lagna</div>
+      <div class="card-body">
+        <div class="info-grid" id="birth-info"></div>
+      </div>
+    </div>
+
+    <!-- Panchang -->
+    <div class="card">
+      <div class="card-header"><span class="icon">📅</span> Panchang</div>
+      <div class="card-body">
+        <div class="panchang-grid" id="panchang-grid"></div>
+      </div>
+    </div>
+
+    <!-- Chart -->
+    <div class="card">
+      <div class="card-header"><span class="icon">🔯</span> Birth Chart — North Indian Style</div>
+      <div class="card-body">
+        <div class="chart-wrap">
+          <canvas id="north-chart" width="420" height="420"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Planets -->
+    <div class="card">
+      <div class="card-header"><span class="icon">🪐</span> Planetary Positions</div>
+      <div class="card-body">
+        <div style="overflow-x:auto;">
+          <table class="data-table" id="planet-table">
+            <thead><tr><th>Planet</th><th>Rashi</th><th>Degree</th><th>Nakshatra</th><th>Pada</th><th>House</th><th>Rashi Lord</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Dasha -->
+    <div class="card">
+      <div class="card-header"><span class="icon">⏳</span> Vimshottari Dasha</div>
+      <div class="card-body" id="dasha-container"></div>
+    </div>
+
+    <!-- Manglik & Doshas -->
+    <div class="card">
+      <div class="card-header"><span class="icon">🔴</span> Manglik & Dosha Analysis</div>
+      <div class="card-body">
+        <div id="manglik-info" style="margin-bottom:16px;"></div>
+        <div style="overflow-x:auto;">
+          <table class="data-table" id="dosha-table">
+            <thead><tr><th>Dosha</th><th>Status</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+let lastData = null;
+
+const RASHI = ["Aries","Taurus","Gemini","Cancer","Leo","Virgo","Libra","Scorpio","Sagittarius","Capricorn","Aquarius","Pisces"];
+const RASHI_HI = ["मेष","वृष","मिथुन","कर्क","सिंह","कन्या","तुला","वृश्चिक","धनु","मकर","कुम्भ","मीन"];
+
+function useDefaultCoords() {
+  document.getElementById('lat').value = '23.0225';
+  document.getElementById('lon').value = '72.5714';
+  document.getElementById('place').value = 'Ahmedabad, India';
+}
+
+function getFormData() {
+  return {
+    name: document.getElementById('name').value.trim(),
+    gender: document.getElementById('gender').value,
+    dob: document.getElementById('dob').value.trim(),
+    tob: document.getElementById('tob').value.trim(),
+    lat: document.getElementById('lat').value,
+    lon: document.getElementById('lon').value,
+    tz: document.getElementById('tz').value,
+    place: document.getElementById('place').value
+  };
+}
+
+function showError(msg) {
+  const el = document.getElementById('error-msg');
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+function hideError() { document.getElementById('error-msg').style.display = 'none'; }
+
+async function generateKundli() {
+  hideError();
+  const fd = getFormData();
+  if (!fd.name || !fd.dob || !fd.tob) { showError("Please fill Name, Date of Birth and Time of Birth."); return; }
+
+  document.getElementById('loader').style.display = 'block';
+  document.getElementById('results').style.display = 'none';
+
+  try {
+    const res = await fetch('/api/kundli', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify(fd)
+    });
+    const json = await res.json();
+    if (!json.success) { showError(json.error || "Calculation failed."); return; }
+    lastData = json.data;
+    renderResults(json.data);
+  } catch(e) {
+    showError("Server error: " + e.message);
+  } finally {
+    document.getElementById('loader').style.display = 'none';
+  }
+}
+
+async function downloadPDF() {
+  const fd = getFormData();
+  if (!fd.name || !fd.dob || !fd.tob) { showError("Please fill required fields first."); return; }
+  const btn = event.target;
+  btn.textContent = '⏳ Generating PDF...';
+  btn.disabled = true;
+  try {
+    const res = await fetch('/api/kundli/pdf', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify(fd)
+    });
+    if (!res.ok) { showError("PDF generation failed."); return; }
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = `Kundli_${fd.name.replace(/\s+/g,'_')}.pdf`;
+    a.click();
+  } catch(e) { showError("PDF error: " + e.message); }
+  finally { btn.textContent = '📄 Download PDF'; btn.disabled = false; }
+}
+
+function renderResults(d) {
+  // Birth info
+  const lagna = d.lagna;
+  document.getElementById('birth-info').innerHTML = [
+    {l:"Name", v: d.name},
+    {l:"Date of Birth", v: d.dob},
+    {l:"Time of Birth", v: d.tob},
+    {l:"Lagna (Ascendant)", v: lagna.rashi},
+    {l:"Lagna Degree", v: lagna.degree + "°"},
+    {l:"Lagna Lord", v: lagna.lord},
+    {l:"Moon Sign (Rashi)", v: d.moon_sign},
+    {l:"Nakshatra", v: d.nakshatra + " (Pada " + d.nakshatra_pada + ")"},
+    {l:"Nakshatra Lord", v: d.nakshatra_lord},
+    {l:"Current Dasha", v: d.current_dasha + " (" + d.dasha_balance + " yrs remaining)"},
+  ].map(x => `<div class="info-item"><div class="label">${x.l}</div><div class="value">${x.v}</div></div>`).join('');
+
+  // Panchang
+  const p = d.panchang;
+  document.getElementById('panchang-grid').innerHTML = [
+    {l:"Tithi", v:p.tithi},{l:"Vara", v:p.vara.split("(")[0]},
+    {l:"Nakshatra", v:p.nakshatra},{l:"Yoga", v:p.yoga},{l:"Karana", v:p.karana}
+  ].map(x=>`<div class="panch-card"><div class="p-label">${x.l}</div><div class="p-val">${x.v}</div></div>`).join('');
+
+  // Chart
+  drawNorthChart(d);
+
+  // Planets
+  const PLANET_SYMBOLS = {Sun:"☉",Moon:"☽",Mars:"♂",Mercury:"☿",Jupiter:"♃",Venus:"♀",Saturn:"♄",Rahu:"☊",Ketu:"☋"};
+  const tbody = document.querySelector('#planet-table tbody');
+  tbody.innerHTML = '';
+  for (const pname of ["Sun","Moon","Mars","Mercury","Jupiter","Venus","Saturn","Rahu","Ketu"]) {
+    const pd = d.planets[pname];
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td><b>${PLANET_SYMBOLS[pname] || ''} ${pname}</b></td>
+      <td>${pd.rashi.split("(")[0].trim()}</td>
+      <td>${pd.degree.toFixed(2)}°</td>
+      <td>${pd.nakshatra}</td>
+      <td>${pd.pada}</td>
+      <td>${pd.house}</td>
+      <td>${pd.lord}</td>`;
+    tbody.appendChild(tr);
+  }
+
+  // Dasha
+  const dc = document.getElementById('dasha-container');
+  dc.innerHTML = '';
+  const today = new Date();
+  for (const dasha of d.dashas.slice(0, 9)) {
+    const sDate = new Date(dasha.start.replace(/(\d+) (\w+) (\d+)/,'$1 $2 $3'));
+    const eDate = new Date(dasha.end.replace(/(\d+) (\w+) (\d+)/,'$1 $2 $3'));
+    const isCurrent = today >= sDate && today <= eDate;
+    const div = document.createElement('div');
+    div.className = 'dasha-item';
+    if (isCurrent) div.style.borderLeftColor = '#FF6600';
+    div.innerHTML = `
+      <div class="dasha-lord" style="${isCurrent?'color:var(--saffron)':''}">${isCurrent?'▶ ':''} ${dasha.lord}</div>
+      <div class="dasha-dates">${dasha.start} → ${dasha.end}</div>
+      <div style="width:80px;">
+        <div class="dasha-bar" style="width:${Math.min(100,dasha.years/20*100)}%"></div>
+      </div>
+      <div style="font-size:0.8rem;color:#888;">${dasha.years} yrs</div>
+    `;
+    dc.appendChild(div);
+  }
+
+  // Manglik
+  const m = d.manglik;
+  const badge = m.is_manglik
+    ? `<span class="badge badge-red">🔴 ${m.note}</span>`
+    : `<span class="badge badge-green">🟢 Non-Manglik</span>`;
+  document.getElementById('manglik-info').innerHTML = `
+    <div style="display:flex;align-items:center;gap:12px;padding:10px;background:var(--light-gold);border-radius:8px;">
+      ${badge}
+      <span style="font-size:0.9rem;">Mars is in House <b>${m.mars_house}</b></span>
+      ${m.is_manglik ? '<span style="font-size:0.82rem;color:#c00;">Consider Manglik matching for marriage.</span>' : ''}
+    </div>`;
+
+  // Doshas
+  const dtb = document.querySelector('#dosha-table tbody');
+  dtb.innerHTML = '';
+  for (const [name, status] of Object.entries(d.doshas)) {
+    const tr = document.createElement('tr');
+    const badge2 = status === "Present"
+      ? `<span class="badge badge-orange">⚠ Present</span>`
+      : `<span class="badge badge-green">✓ Absent</span>`;
+    tr.innerHTML = `<td><b>${name}</b></td><td>${badge2}</td>`;
+    dtb.appendChild(tr);
+  }
+
+  document.getElementById('results').style.display = 'block';
+  document.getElementById('results').scrollIntoView({behavior:'smooth'});
+}
+
+function drawNorthChart(d) {
+  const canvas = document.getElementById('north-chart');
+  const ctx = canvas.getContext('2d');
+  const W = 420, H = 420, CX = W/2, CY = H/2;
+  ctx.clearRect(0,0,W,H);
+
+  // Background
+  ctx.fillStyle = '#FDF3DC';
+  ctx.fillRect(0,0,W,H);
+  ctx.strokeStyle = '#8B0000';
+  ctx.lineWidth = 2;
+  ctx.strokeRect(2,2,W-4,H-4);
+
+  // Diagonals
+  ctx.strokeStyle = '#8B0000';
+  ctx.lineWidth = 1.5;
+  [[0,0,W,H],[W,0,0,H],[0,CY,W,CY],[CX,0,CX,H]].forEach(([x1,y1,x2,y2]) => {
+    ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke();
+  });
+  // Inner diamond
+  ctx.beginPath();
+  ctx.moveTo(CX, 8); ctx.lineTo(W-8, CY); ctx.lineTo(CX, H-8); ctx.lineTo(8, CY);
+  ctx.closePath();
+  ctx.strokeStyle = '#8B0000'; ctx.lineWidth=1.5; ctx.stroke();
+  ctx.fillStyle = '#FFFEF5'; ctx.fill();
+
+  // House positions (North Indian) for 12 houses
+  // North Indian: H1 top, going counterclockwise in outer cells, then inner
+  const hPos = [
+    [CX, H-50],        // H1 top (inner top)
+    [68, H-68],        // H2 top-left corner
+    [25, CY],          // H3 left
+    [68, 68],          // H4 bottom-left corner  
+    [CX, 50],          // H5 bottom (inner bottom)
+    [W-68, 68],        // H6 bottom-right corner
+    [W-25, CY],        // H7 right
+    [W-68, H-68],      // H8 top-right corner
+    [CX+60, CY-20],    // H9 right-inner
+    [CX, CY+30],       // H10 center-bottom
+    [CX-60, CY-20],    // H11 left-inner
+    [CX, CY-30],       // H12 center-top
+  ];
+
+  const lagna_rashi = d.lagna.rashi_idx;
+  const houses = d.houses;
+
+  // House->planets
+  const hPlanets = {};
+  for (let i=1;i<=12;i++) hPlanets[i]=[];
+  for (const [pname, pdata] of Object.entries(d.planets)) {
+    hPlanets[pdata.house] = hPlanets[pdata.house] || [];
+    hPlanets[pdata.house].push(pname.substring(0,3));
+  }
+
+  const PLANET_SYM = {Sun:"Su",Moon:"Mo",Mar:"Ma",Mer:"Me",Jup:"Ju",Ven:"Ve",Sat:"Sa",Rah:"Ra",Ket:"Ke"};
+
+  ctx.textAlign = 'center';
+  for (let i=0; i<12; i++) {
+    const [hx, hy] = hPos[i];
+    const rashiIdx = houses[i];
+    const hNum = i + 1;
+    // Rashi number
+    ctx.font = 'bold 13px Arial';
+    ctx.fillStyle = '#8B0000';
+    ctx.fillText(RASHI[rashiIdx].substring(0,3), hx, hy+4);
+    // Rashi number small
+    ctx.font = '10px Arial';
+    ctx.fillStyle = '#C8960C';
+    ctx.fillText(rashiIdx+1, hx, hy+16);
+    // Planets
+    const pl = hPlanets[hNum] || [];
+    ctx.font = 'bold 9px Arial';
+    ctx.fillStyle = '#1A237E';
+    pl.slice(0,3).forEach((p,j) => {
+      const sym = PLANET_SYM[p] || p;
+      ctx.fillText(sym, hx, hy - 14 - j*11);
+    });
+  }
+  // Lagna label in H1
+  ctx.font = 'bold 10px Arial';
+  ctx.fillStyle = '#FF6600';
+  ctx.fillText('Lag', hPos[0][0], hPos[0][1]-32);
+}
+</script>
+</body>
+</html>

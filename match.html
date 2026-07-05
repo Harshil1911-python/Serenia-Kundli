@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Marriage Matching — Jyotish Kundli</title>
+<style>
+  :root {
+    --saffron: #FF6600;
+    --maroon: #800000;
+    --dark-red: #8B0000;
+    --gold: #C8960C;
+    --cream: #FFF8E7;
+    --light-gold: #FDF3DC;
+    --text: #2C1810;
+    --pink: #8B0044;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; background: #1a0a0a; color: var(--text); min-height: 100vh; }
+  .top-bar { background: linear-gradient(135deg, var(--dark-red), #4a0000); color: white; padding: 0; box-shadow: 0 4px 20px rgba(0,0,0,0.5); }
+  .top-bar-inner { max-width: 1200px; margin: 0 auto; padding: 16px 24px; display: flex; align-items: center; justify-content: space-between; }
+  .logo { font-size: 1.6rem; font-weight: 700; letter-spacing: 1px; }
+  .logo span { color: var(--gold); }
+  .nav a { color: rgba(255,255,255,0.85); text-decoration: none; padding: 8px 16px; border-radius: 6px; margin-left: 8px; font-size: 0.95rem; transition: background 0.2s; }
+  .nav a:hover, .nav a.active { background: rgba(200,150,12,0.3); color: var(--gold); }
+  .hero { background: linear-gradient(180deg, #1a0a0a, #2d0a0a); padding: 40px 24px 20px; text-align: center; }
+  .hero h1 { font-size: 2.2rem; color: var(--gold); font-weight: 700; letter-spacing: 2px; }
+  .hero p { color: rgba(255,200,100,0.7); font-size: 1rem; margin-top: 8px; font-style: italic; }
+  .container { max-width: 1100px; margin: 0 auto; padding: 24px; }
+  .card { background: var(--cream); border-radius: 12px; box-shadow: 0 8px 32px rgba(0,0,0,0.4); overflow: hidden; margin-bottom: 24px; }
+  .card-header { background: linear-gradient(135deg, var(--dark-red), var(--maroon)); color: white; padding: 14px 20px; font-size: 1.05rem; font-weight: 700; letter-spacing: 1px; display: flex; align-items: center; gap: 8px; }
+  .card-header.pink { background: linear-gradient(135deg, var(--pink), var(--maroon)); }
+  .card-body { padding: 20px; }
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .form-group { display: flex; flex-direction: column; gap: 5px; }
+  .form-group label { font-weight: 600; color: var(--maroon); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px; }
+  .form-group input, .form-group select { padding: 9px 12px; border: 2px solid #e0c090; border-radius: 7px; font-size: 0.93rem; background: white; color: var(--text); transition: border-color 0.2s; }
+  .form-group input:focus, .form-group select:focus { outline: none; border-color: var(--gold); box-shadow: 0 0 0 3px rgba(200,150,12,0.15); }
+  .form-hint { font-size: 0.75rem; color: #999; }
+  .btn { padding: 12px 28px; border: none; border-radius: 8px; font-size: 0.98rem; font-weight: 700; cursor: pointer; transition: all 0.2s; letter-spacing: 0.5px; }
+  .btn-primary { background: linear-gradient(135deg, var(--pink), var(--saffron)); color: white; }
+  .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(139,0,68,0.4); }
+  .btn-pdf { background: linear-gradient(135deg, #2E7D32, #4CAF50); color: white; }
+  .btn-pdf:hover { transform: translateY(-2px); }
+  .btn-group { display: flex; gap: 12px; margin-top: 16px; flex-wrap: wrap; }
+  .loader { display: none; text-align: center; padding: 40px; }
+  .spinner { width: 50px; height: 50px; border: 5px solid var(--light-gold); border-top-color: var(--gold); border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 16px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .result-section { display: none; }
+  .error-msg { background: #fde8e8; border: 2px solid #e00; border-radius: 8px; padding: 14px; color: #900; font-weight: 600; margin-top: 12px; display: none; }
+
+  /* Score ring */
+  .score-ring-wrap { text-align: center; padding: 20px; }
+  .score-ring { display: inline-flex; flex-direction: column; align-items: center; justify-content: center; width: 160px; height: 160px; border-radius: 50%; border: 8px solid var(--gold); background: linear-gradient(135deg, var(--cream), var(--light-gold)); }
+  .score-num { font-size: 2.5rem; font-weight: 700; color: var(--maroon); line-height: 1; }
+  .score-denom { font-size: 1rem; color: #888; }
+  .score-pct { font-size: 1.1rem; font-weight: 700; color: var(--saffron); margin-top: 4px; }
+  .score-verdict { font-size: 0.9rem; font-weight: 700; margin-top: 4px; }
+
+  /* Gunas */
+  .guna-row { display: flex; align-items: center; gap: 10px; padding: 8px 12px; background: var(--light-gold); border-radius: 8px; margin-bottom: 6px; border-left: 4px solid var(--gold); }
+  .guna-name { font-weight: 700; width: 100px; font-size: 0.9rem; color: var(--maroon); }
+  .guna-detail { font-size: 0.8rem; color: #666; flex: 1; }
+  .guna-score-bar { width: 120px; }
+  .guna-bar-bg { height: 8px; background: #e0d0b0; border-radius: 4px; }
+  .guna-bar-fill { height: 8px; border-radius: 4px; transition: width 0.5s; }
+  .guna-score-text { font-weight: 700; font-size: 0.85rem; width: 40px; text-align: right; }
+
+  /* Compare */
+  .comp-grid { display: grid; grid-template-columns: 1fr auto 1fr; gap: 8px; align-items: center; margin-bottom: 6px; }
+  .comp-l { text-align: right; font-size: 0.88rem; }
+  .comp-label { font-size: 0.75rem; color: var(--maroon); font-weight: 700; text-transform: uppercase; text-align: center; background: var(--light-gold); padding: 4px 8px; border-radius: 4px; }
+  .comp-r { font-size: 0.88rem; }
+
+  /* Info grid */
+  .info-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 10px; }
+  .info-item { background: var(--light-gold); border: 1px solid var(--gold); border-radius: 8px; padding: 10px; }
+  .info-item .label { font-size: 0.72rem; color: var(--maroon); font-weight: 700; text-transform: uppercase; margin-bottom: 3px; }
+  .info-item .value { font-size: 0.92rem; font-weight: 600; }
+
+  /* Badge */
+  .badge { padding: 3px 10px; border-radius: 20px; font-size: 0.78rem; font-weight: 700; }
+  .badge-red { background: #fde8e8; color: #c00; border: 1px solid #f00; }
+  .badge-green { background: #e8fde8; color: #060; border: 1px solid #0a0; }
+  .badge-orange { background: #fdf0e0; color: #c60; border: 1px solid #f90; }
+
+  /* Dosha table */
+  .data-table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+  .data-table th { background: var(--dark-red); color: white; padding: 8px 12px; text-align: left; }
+  .data-table td { padding: 7px 12px; border-bottom: 1px solid #e0c090; }
+  .data-table tr:nth-child(even) { background: var(--light-gold); }
+
+  .vs-divider { display: flex; align-items: center; justify-content: center; font-size: 2rem; font-weight: 700; color: var(--gold); }
+
+  @media(max-width:700px) {
+    .two-col { grid-template-columns: 1fr; }
+    .form-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="top-bar">
+  <div class="top-bar-inner">
+    <div class="logo">🕉 <span>Jyotish</span> Kundli</div>
+    <div class="nav">
+      <a href="/">Kundli</a>
+      <a href="/match" class="active">Marriage Matching</a>
+    </div>
+  </div>
+</div>
+<div class="hero">
+  <h1>💍 Marriage Compatibility (Gun Milan)</h1>
+  <p style="font-style:italic;color:rgba(255,200,100,0.7);">"जहाँ प्रेम है, वहाँ जीवन है" — Where there is Love, there is Life</p>
+</div>
+<div class="container">
+  <div class="two-col">
+    <!-- Person 1 -->
+    <div class="card">
+      <div class="card-header"><span>👰 Person 1 (Bride / Partner A)</span></div>
+      <div class="card-body">
+        <div class="form-grid">
+          <div class="form-group" style="grid-column:1/-1;">
+            <label>Full Name</label>
+            <input type="text" id="p1_name" placeholder="e.g., Priya Sharma" />
+          </div>
+          <div class="form-group">
+            <label>Gender</label>
+            <select id="p1_gender"><option>Female</option><option>Male</option><option>Other</option></select>
+          </div>
+          <div class="form-group">
+            <label>Date of Birth</label>
+            <input type="text" id="p1_dob" placeholder="DD/MM/YYYY" />
+          </div>
+          <div class="form-group">
+            <label>Time of Birth</label>
+            <input type="text" id="p1_tob" placeholder="HH:MM" />
+          </div>
+          <div class="form-group">
+            <label>Place of Birth</label>
+            <input type="text" id="p1_place" placeholder="City, Country" />
+          </div>
+          <div class="form-group">
+            <label>Latitude</label>
+            <input type="number" id="p1_lat" value="23.0225" step="0.0001" />
+          </div>
+          <div class="form-group">
+            <label>Longitude</label>
+            <input type="number" id="p1_lon" value="72.5714" step="0.0001" />
+          </div>
+          <div class="form-group">
+            <label>Time Zone</label>
+            <select id="p1_tz">
+              <option value="5.5" selected>IST +5:30</option>
+              <option value="0">UTC +0:00</option>
+              <option value="1">CET +1:00</option>
+              <option value="2">EET +2:00</option>
+              <option value="3">AST +3:00</option>
+              <option value="4">GST +4:00</option>
+              <option value="6">BST +6:00</option>
+              <option value="8">CST +8:00</option>
+              <option value="-5">EST -5:00</option>
+              <option value="-8">PST -8:00</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- Person 2 -->
+    <div class="card">
+      <div class="card-header pink"><span>🤵 Person 2 (Groom / Partner B)</span></div>
+      <div class="card-body">
+        <div class="form-grid">
+          <div class="form-group" style="grid-column:1/-1;">
+            <label>Full Name</label>
+            <input type="text" id="p2_name" placeholder="e.g., Rahul Patel" />
+          </div>
+          <div class="form-group">
+            <label>Gender</label>
+            <select id="p2_gender"><option>Male</option><option>Female</option><option>Other</option></select>
+          </div>
+          <div class="form-group">
+            <label>Date of Birth</label>
+            <input type="text" id="p2_dob" placeholder="DD/MM/YYYY" />
+          </div>
+          <div class="form-group">
+            <label>Time of Birth</label>
+            <input type="text" id="p2_tob" placeholder="HH:MM" />
+          </div>
+          <div class="form-group">
+            <label>Place of Birth</label>
+            <input type="text" id="p2_place" placeholder="City, Country" />
+          </div>
+          <div class="form-group">
+            <label>Latitude</label>
+            <input type="number" id="p2_lat" value="19.0760" step="0.0001" />
+          </div>
+          <div class="form-group">
+            <label>Longitude</label>
+            <input type="number" id="p2_lon" value="72.8777" step="0.0001" />
+          </div>
+          <div class="form-group">
+            <label>Time Zone</label>
+            <select id="p2_tz">
+              <option value="5.5" selected>IST +5:30</option>
+              <option value="0">UTC +0:00</option>
+              <option value="1">CET +1:00</option>
+              <option value="2">EET +2:00</option>
+              <option value="3">AST +3:00</option>
+              <option value="4">GST +4:00</option>
+              <option value="6">BST +6:00</option>
+              <option value="8">CST +8:00</option>
+              <option value="-5">EST -5:00</option>
+              <option value="-8">PST -8:00</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="btn-group" style="justify-content:center;">
+    <button class="btn btn-primary" onclick="doMatch()">💍 Calculate Compatibility</button>
+    <button class="btn btn-pdf" onclick="downloadMatchPDF()">📄 Download Combined PDF</button>
+  </div>
+  <div class="error-msg" id="error-msg"></div>
+
+  <div class="loader" id="loader">
+    <div class="spinner"></div>
+    <p style="color:var(--gold);font-size:1rem;">Analyzing cosmic compatibility...</p>
+  </div>
+
+  <div class="result-section" id="results">
+    <!-- Score -->
+    <div class="card" style="margin-top:24px;">
+      <div class="card-header" style="justify-content:center;font-size:1.2rem;">✨ Compatibility Score</div>
+      <div class="card-body">
+        <div class="score-ring-wrap">
+          <div class="score-ring" id="score-ring">
+            <div class="score-num" id="score-num">—</div>
+            <div class="score-denom">out of 36</div>
+            <div class="score-pct" id="score-pct">—%</div>
+            <div class="score-verdict" id="score-verdict">—</div>
+          </div>
+        </div>
+        <p id="verdict-msg" style="text-align:center;font-size:0.95rem;color:var(--maroon);font-weight:600;margin-top:12px;"></p>
+      </div>
+    </div>
+
+    <!-- Individual Kundli summaries -->
+    <div class="two-col">
+      <div class="card">
+        <div class="card-header">👰 <span id="p1-label">Person 1</span> — Summary</div>
+        <div class="card-body"><div class="info-grid" id="k1-info"></div></div>
+      </div>
+      <div class="card">
+        <div class="card-header pink">🤵 <span id="p2-label">Person 2</span> — Summary</div>
+        <div class="card-body"><div class="info-grid" id="k2-info"></div></div>
+      </div>
+    </div>
+
+    <!-- 36 Gunas -->
+    <div class="card">
+      <div class="card-header">🔯 36 Gun Milan — Ashtakoot</div>
+      <div class="card-body" id="gunas-container"></div>
+    </div>
+
+    <!-- Manglik -->
+    <div class="card">
+      <div class="card-header">🔴 Manglik Comparison</div>
+      <div class="card-body">
+        <div class="two-col" id="manglik-compare"></div>
+        <div id="manglik-verdict" style="margin-top:12px;padding:12px;background:var(--light-gold);border-radius:8px;"></div>
+      </div>
+    </div>
+
+    <!-- Doshas -->
+    <div class="card">
+      <div class="card-header">⚠️ Key Doshas & Remedies</div>
+      <div class="card-body">
+        <table class="data-table">
+          <thead><tr><th>Dosha</th><th>Status</th><th>Remedy</th></tr></thead>
+          <tbody id="dosha-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Strengths & Cautions -->
+    <div class="card">
+      <div class="card-header">💡 Strengths & Caution Areas</div>
+      <div class="card-body">
+        <div class="two-col">
+          <div>
+            <h3 style="color:green;margin-bottom:10px;">✅ Strengths</h3>
+            <div id="strengths-list"></div>
+          </div>
+          <div>
+            <h3 style="color:#c60;margin-bottom:10px;">⚠️ Caution Areas</h3>
+            <div id="cautions-list"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function getPerson(n) {
+  return {
+    name: document.getElementById(`p${n}_name`).value.trim(),
+    gender: document.getElementById(`p${n}_gender`).value,
+    dob: document.getElementById(`p${n}_dob`).value.trim(),
+    tob: document.getElementById(`p${n}_tob`).value.trim(),
+    lat: document.getElementById(`p${n}_lat`).value,
+    lon: document.getElementById(`p${n}_lon`).value,
+    tz: document.getElementById(`p${n}_tz`).value,
+  };
+}
+function showError(m) { const e = document.getElementById('error-msg'); e.textContent=m; e.style.display='block'; }
+function hideError() { document.getElementById('error-msg').style.display='none'; }
+
+async function doMatch() {
+  hideError();
+  const p1 = getPerson(1), p2 = getPerson(2);
+  if (!p1.name||!p1.dob||!p1.tob||!p2.name||!p2.dob||!p2.tob) { showError("Please fill all required fields for both persons."); return; }
+  document.getElementById('loader').style.display='block';
+  document.getElementById('results').style.display='none';
+  try {
+    const res = await fetch('/api/match',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({person1:p1,person2:p2})});
+    const json = await res.json();
+    if (!json.success) { showError(json.error||"Calculation failed."); return; }
+    renderMatch(json);
+  } catch(e) { showError("Error: "+e.message); }
+  finally { document.getElementById('loader').style.display='none'; }
+}
+
+async function downloadMatchPDF() {
+  hideError();
+  const p1 = getPerson(1), p2 = getPerson(2);
+  if (!p1.name||!p1.dob||!p1.tob||!p2.name||!p2.dob||!p2.tob) { showError("Please fill all required fields."); return; }
+  const btn = event.target; btn.textContent='⏳ Generating...'; btn.disabled=true;
+  try {
+    const res = await fetch('/api/match/pdf',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({person1:p1,person2:p2})});
+    if (!res.ok) { showError("PDF failed."); return; }
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href=url;
+    a.download=`Match_${p1.name.replace(/\s+/g,'_')}_${p2.name.replace(/\s+/g,'_')}.pdf`;
+    a.click();
+  } catch(e) { showError("PDF error: "+e.message); }
+  finally { btn.textContent='📄 Download Combined PDF'; btn.disabled=false; }
+}
+
+function renderMatch(json) {
+  const {kundli1:k1, kundli2:k2, gun_milan:gm} = json;
+  // Score ring
+  const total = gm.total;
+  const pct = gm.percentage;
+  const verdict = gm.verdict;
+  const vColor = total>=24?'#2E7D32':(total>=18?'#e65100':'#c00');
+  document.getElementById('score-num').textContent = total;
+  document.getElementById('score-pct').textContent = pct + '%';
+  document.getElementById('score-verdict').textContent = verdict;
+  document.getElementById('score-verdict').style.color = vColor;
+  document.getElementById('score-ring').style.borderColor = vColor;
+  const msgs = {
+    "Excellent":"This match is highly auspicious. Excellent harmony and compatibility expected.",
+    "Very Good":"Very compatible match with strong mutual support and love.",
+    "Good":"Generally favorable match with good understanding.",
+    "Average":"Some compatibility with notable differences. Open communication is key.",
+    "Poor":"Significant incompatibilities. Detailed Jyotishi consultation strongly advised."
+  };
+  document.getElementById('verdict-msg').textContent = msgs[verdict];
+  document.getElementById('verdict-msg').style.color = vColor;
+
+  // Person labels
+  document.getElementById('p1-label').textContent = k1.name;
+  document.getElementById('p2-label').textContent = k2.name;
+
+  // Kundli summaries
+  function kInfo(k) {
+    return [
+      {l:"Lagna",v:k.lagna.rashi.split("(")[0]},
+      {l:"Moon Sign",v:k.moon_sign.split("(")[0]},
+      {l:"Nakshatra",v:k.nakshatra},
+      {l:"Nak Lord",v:k.nakshatra_lord},
+      {l:"Current Dasha",v:k.current_dasha},
+      {l:"Manglik",v:k.manglik.note},
+    ].map(x=>`<div class="info-item"><div class="label">${x.l}</div><div class="value">${x.v}</div></div>`).join('');
+  }
+  document.getElementById('k1-info').innerHTML = kInfo(k1);
+  document.getElementById('k2-info').innerHTML = kInfo(k2);
+
+  // Gunas
+  const gc = document.getElementById('gunas-container');
+  gc.innerHTML = '';
+  let tot = 0;
+  for (const [name, val] of Object.entries(gm.gunas)) {
+    tot += val.score;
+    const pctBar = (val.score / val.max) * 100;
+    const barColor = pctBar >= 70 ? '#2E7D32' : pctBar >= 40 ? '#e65100' : '#c00';
+    const div = document.createElement('div');
+    div.className = 'guna-row';
+    div.innerHTML = `
+      <div class="guna-name">${name}</div>
+      <div class="guna-detail">${val.detail}</div>
+      <div class="guna-score-bar">
+        <div class="guna-bar-bg">
+          <div class="guna-bar-fill" style="width:${pctBar}%;background:${barColor};"></div>
+        </div>
+      </div>
+      <div class="guna-score-text" style="color:${barColor};">${val.score}/${val.max}</div>
+    `;
+    gc.appendChild(div);
+  }
+  // Total row
+  const totalDiv = document.createElement('div');
+  totalDiv.style.cssText = 'padding:12px;margin-top:8px;background:linear-gradient(135deg,#8B0000,#800000);color:white;border-radius:8px;display:flex;justify-content:space-between;align-items:center;';
+  totalDiv.innerHTML = `<span style="font-weight:700;font-size:1rem;">TOTAL</span><span style="font-weight:700;font-size:1.2rem;">${total}/36 = ${pct}% — ${verdict}</span>`;
+  gc.appendChild(totalDiv);
+
+  // Manglik
+  function mCard(k) {
+    const m = k.manglik;
+    const badge = m.is_manglik
+      ? `<span class="badge badge-red">🔴 ${m.note}</span>`
+      : `<span class="badge badge-green">🟢 Non-Manglik</span>`;
+    return `<div style="background:var(--light-gold);padding:14px;border-radius:8px;">
+      <div style="font-weight:700;color:var(--maroon);margin-bottom:8px;">${k.name}</div>
+      ${badge}
+      <div style="margin-top:6px;font-size:0.85rem;">Mars in House <b>${m.mars_house}</b></div>
+    </div>`;
+  }
+  document.getElementById('manglik-compare').innerHTML = mCard(k1) + mCard(k2);
+  const m1 = k1.manglik, m2 = k2.manglik;
+  let mMsg, mCol;
+  if (m1.is_manglik && m2.is_manglik) { mMsg = "✅ Both Manglik — Dosha cancels out. Highly auspicious!"; mCol = "green"; }
+  else if (m1.is_manglik || m2.is_manglik) { mMsg = "⚠️ One partner is Manglik. Kumbh Vivah or specific pujas recommended before marriage."; mCol = "#c60"; }
+  else { mMsg = "✅ Neither partner is Manglik. No concerns."; mCol = "green"; }
+  document.getElementById('manglik-verdict').innerHTML = `<span style="color:${mCol};font-weight:700;">${mMsg}</span>`;
+
+  // Doshas
+  const dtb = document.getElementById('dosha-tbody');
+  dtb.innerHTML = '';
+  const doshas = [
+    {name:"Nadi Dosha", present:gm.nadi_dosha, remedy:"Maha Mrityunjaya Japa (1,25,000 times)"},
+    {name:"Bhakoot Dosha", present:gm.bhakoot_dosha, remedy:"Venus worship, Lakshmi Puja"},
+    {name:"Manglik Dosha", present:(m1.is_manglik||m2.is_manglik)&&!(m1.is_manglik&&m2.is_manglik),
+      remedy:"Kumbh Vivah or Vishnu Puja"},
+  ];
+  doshas.forEach(d => {
+    const tr = document.createElement('tr');
+    const badge = d.present
+      ? '<span class="badge badge-orange">⚠ Present</span>'
+      : '<span class="badge badge-green">✓ Absent</span>';
+    tr.innerHTML = `<td><b>${d.name}</b></td><td>${badge}</td><td style="font-size:0.83rem;">${d.present?d.remedy:"None required"}</td>`;
+    dtb.appendChild(tr);
+  });
+
+  // Strengths & Cautions
+  const strengths = [], cautions = [];
+  for (const [name, val] of Object.entries(gm.gunas)) {
+    const r = val.score / val.max;
+    if (r >= 0.7) strengths.push({name, score:`${val.score}/${val.max}`});
+    else if (r < 0.4) cautions.push({name, score:`${val.score}/${val.max}`});
+  }
+  const sl = document.getElementById('strengths-list');
+  sl.innerHTML = strengths.length
+    ? strengths.map(s=>`<div style="padding:6px 10px;background:#e8fde8;border-left:4px solid green;border-radius:6px;margin-bottom:6px;font-size:0.88rem;"><b>${s.name}</b> — ${s.score}</div>`).join('')
+    : '<div style="color:#888;font-size:0.88rem;">No outstanding strengths</div>';
+  const cl = document.getElementById('cautions-list');
+  cl.innerHTML = cautions.length
+    ? cautions.map(c=>`<div style="padding:6px 10px;background:#fdf0e0;border-left:4px solid #e65100;border-radius:6px;margin-bottom:6px;font-size:0.88rem;"><b>${c.name}</b> — ${c.score}</div>`).join('')
+    : '<div style="color:green;font-size:0.88rem;">✅ No major caution areas!</div>';
+
+  document.getElementById('results').style.display = 'block';
+  document.getElementById('results').scrollIntoView({behavior:'smooth'});
+}
+</script>
+</body>
+</html>
